@@ -39,7 +39,7 @@ Screens.play = {
     Music.play(this.L.type === 'boss' ? 'boss' : this.WD.theme === 'castello' ? 'notte' : 'volo');
     this.last = performance.now();
     this.loop = t => {
-      const dt = Math.min(0.05, (t - this.last) / 1000); this.last = t;
+      const dt = clamp((t - this.last) / 1000, 0, 0.05); this.last = t;
       if (!this.paused) this.update(dt);
       this.draw();
       this.raf = requestAnimationFrame(this.loop);
@@ -518,7 +518,7 @@ Screens.play = {
     c.save(); c.translate(p.x, py);
     c.rotate(clamp((p.ty - p.y) * 0.002, -0.35, 0.35) + Math.sin(p.spin) * 0.3);
     if (p.inv > 0 && Math.floor(p.inv * 12) % 2) c.globalAlpha = 0.45;
-    const img = this.imgs[Math.floor(t * 7) % 2];
+    const img = this.imgs[Math.abs(Math.floor(t * 7)) % 2];
     if (img.complete) c.drawImage(img, -size / 2, -size / 2, size, size);
     c.restore(); c.globalAlpha = 1;
     if (this.m.carry) emoji(c, '💌', p.x + size * 0.12, py - size * 0.42, 30 * k, Math.sin(t * 5) * 0.2);

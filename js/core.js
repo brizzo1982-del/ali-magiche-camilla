@@ -296,7 +296,7 @@ const FX = {
     if (this.running) return; this.running = true;
     let last = performance.now();
     const loop = t => {
-      const dt = Math.min(0.05, (t - last) / 1000); last = t;
+      const dt = clamp((t - last) / 1000, 0, 0.05); last = t;
       const c = this.ctx; c.setTransform(this.dpr, 0, 0, this.dpr, 0, 0); c.clearRect(0, 0, innerWidth, innerHeight);
       this.parts = this.parts.filter(p => (p.life -= dt) > 0);
       for (const p of this.parts) {
