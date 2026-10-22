@@ -30,7 +30,7 @@ Screens.play = {
     const look = this.rider.look;
     this.imgs = [-14, 16].map(a => { const i = new Image(); i.src = svgUrl(unicornSVG(look, { wings: true, flap: a })); return i; });
     if (this.L.type === 'boss') { this.cageImg = new Image(); this.cageImg.src = svgUrl(unicornSVG(RIDERS[w].look, { wings: true })); }
-    const setT = e => { const r = this.cv.getBoundingClientRect(); this.p.ty = clamp(e.clientY - r.top, 50, this.H - 30); this.p.tx = clamp(e.clientX - r.left, this.W * 0.08, this.W * 0.62); };
+    const setT = e => { const r = this.cv.getBoundingClientRect(); this.p.ty = clamp(e.clientY - r.top, 50, this.H - 30); this.p.tx = clamp(e.clientX - r.left, this.W * 0.08, this.W * this.maxX()); };
     this.cv.addEventListener('pointerdown', e => { this.cv.setPointerCapture(e.pointerId); setT(e); this.touched = true; });
     this.cv.addEventListener('pointermove', e => { if (e.buttons || e.pointerType === 'mouse') setT(e); });
     $('.pause-btn', el).onclick = () => this.pause();
@@ -87,6 +87,9 @@ Screens.play = {
       case 'boss': return `Ecco il ${W.boss}! Prendi un arcobaleno!`;
     }
   },
+
+  // fin dove può arrivare l'unicorno: contro il Nuvolone deve poterlo raggiungere
+  maxX() { return this.boss && !this.boss.calm ? 0.9 : 0.62; },
 
   /* ---------- HUD ---------- */
   hud() {
@@ -373,8 +376,9 @@ Screens.play = {
       }
     }
     if (this.state !== 'play') return;
-    if (Math.hypot(b.x - p.x, b.y - py) < b.r * 0.85 + size * 0.3) {
-      p.tx = this.W * 0.22; p.x -= 60 * k; // rimbalzo
+    if (this.m.charged) { p.ty += (b.y - p.ty) * Math.min(1, dt * 1.6); p.tx += (b.x - p.tx) * Math.min(1, dt * 0.9); }
+    if (Math.hypot(b.x - p.x, b.y - py) < b.r * 1.05 + size * 0.35) {
+      p.tx = this.W * 0.3; p.x -= 50 * k; // rimbalzo
       if (this.m.charged) {
         this.m.charged = false; b.hp--; b.flash = 0.35;
         const [sx, sy] = this.screen(b.x - b.r * 0.6, b.y);
@@ -496,6 +500,14 @@ Screens.play = {
         c.fillStyle = '#748ffc'; c.beginPath(); c.moveTo(o.x - o.r * 1.6, o.y);
         c.quadraticCurveTo(o.x, o.y - o.r * 1.1, o.x + o.r, o.y); c.arc(o.x, o.y, o.r, 0, Math.PI); c.fill();
         c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(o.x + o.r * 0.3, o.y - o.r * 0.2, o.r * 0.3, 0, 7); c.fill();
+      }
+    }
+    if (this.boss && this.m.charged && !this.boss.calm) { // stelline che indicano la strada verso il Nuvolone
+      const b = this.boss;
+      glow(c, b.x, b.y, b.r * 1.5, `hsla(${(t * 200) % 360},95%,70%,.45)`);
+      for (let i = 0; i < 6; i++) {
+        const f = ((t * 0.9 + i / 6) % 1), x = p.x + (b.x - p.x) * f, y = p.y + (b.y - p.y) * f;
+        c.fillStyle = RAINBOW[i]; drawStar(c, x, y, 8 * k, 5, 0.5); c.fill();
       }
     }
     if (this.boss) drawBoss(c, this.boss.x, this.boss.y, this.boss.r, this.boss.mood, t, this.boss.flash, this.boss.king);
